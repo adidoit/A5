@@ -24,6 +24,7 @@ Options:
     --finetune_lr=<value>                   finetuning lr [default: 6e-4]
 """
 from docopt import docopt
+import sys
 from datetime import datetime
 import numpy as np
 import torch

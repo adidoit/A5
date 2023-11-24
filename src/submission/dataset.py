@@ -175,9 +175,44 @@ class CharCorruptionDataset(Dataset):
         ### [part e]: see spec above
 
         ### START CODE HERE
-        ### END CODE HERE
+    # Retrieve the document based on the index
+        document = self.data[idx]
 
-        raise NotImplementedError
+        # Randomly truncate the document
+        max_length = int(self.block_size * 7 / 8)
+        truncated_length = random.randint(4, max_length)
+        document = document[:truncated_length]
+
+        # Randomly choose the length of the masked content
+        # The length of [masked_content] should be random, and 1/4 the length of the truncated document on average.
+        mask_length = random.randint(1, max(1, int(len(document))))  # Ensuring at least 1 character is masked
+        avg_mask_length = int(len(document) / 4)
+        mask_length = min(mask_length, avg_mask_length)  # Ensuring we don't exceed the average mask length
+
+        # Randomly choose the start of the masked content
+        start_mask = random.randint(0, len(document) - mask_length)
+        end_mask = start_mask + mask_length
+
+        # Break the document into prefix, masked_content, and suffix
+        prefix = document[:start_mask]
+        masked_content = document[start_mask:end_mask]
+        suffix = document[end_mask:]
+
+        # Construct the masked string
+        masked_string = prefix + self.MASK_CHAR + suffix
+        masked_string += self.MASK_CHAR + masked_content + self.MASK_CHAR
+        masked_string += self.PAD_CHAR * (self.block_size - len(masked_string))  # Add padding
+
+        # Construct the input and output sequences
+        x_str = masked_string[:-1]  # Input is all but the last character
+        y_str = masked_string[1:]   # Output is all but the first character
+
+        # Encode the input and output sequences as Long tensors
+        x = torch.tensor([self.stoi.get(c, 0) for c in x_str], dtype=torch.long)
+        y = torch.tensor([self.stoi.get(c, 0) for c in y_str], dtype=torch.long)
+
+        return x, y
+        ### END CODE HERE
 
 """
 Code under here is strictly for your debugging purposes; feel free to modify
